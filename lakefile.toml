@@ -1,0 +1,24 @@
+name = "RNT"
+version = "0.1.0"
+keywords = ["math", "resonance", "nilpotent", "theory"]
+defaultTargets = ["RNT"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+autoImplicit = false
+diagnostics = true
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+
+[[require]]
+name = "batteries"
+scope = "leanprover-community"
+rev = "main"
+
+[[lean_lib]]
+name = "RNT"
+
+[[lean_exe]]
+name = "check_all"
