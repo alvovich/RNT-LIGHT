@@ -48,7 +48,7 @@ The project follows modular Lean4 architecture:
 - **Theorem 1.7**: Cohomology H²(A_ε) ≅ ℂ², H³_red(A_ε) ≅ ℂ (reduced), dim Soc(A_ε) = 3
 
 ### Core Module (Sections 2-3):
-- **Definition 1.3.1**: Braided ∞-category structure with hexagonal axioms
+- **Definition 1.3.1**: Symmetric monoidal category structure with hexagonal axioms
 - **Theorem 3.3**: Triviality of evolution Φ on S¹ (all rotations by 2πℤ are identity)
 - **Corollary 3.4**: All points of S¹ are fixed points of Φ
 

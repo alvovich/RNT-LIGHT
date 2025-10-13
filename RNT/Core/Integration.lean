@@ -1,6 +1,6 @@
 -- RNT/Core/Integration.lean
 -- Integration of all RNT-LIGHT components
--- Connecting universal system ℌ, braided ∞-category 𝒜, and algebra A_ε
+-- Connecting universal system ℌ, symmetric monoidal category 𝒜, and algebra A_ε
 
 import RNT.Basic
 import RNT.Algebra.BasisAlgebra
@@ -116,7 +116,7 @@ noncomputable def grade_linear_basis : BasisAlgebra →ₗ[ℂ] ℂ := {
   map_smul' := by simp
 }
 
-/-- A_ε as an object in the braided ∞-category -/
+/-- A_ε as an object in the symmetric monoidal category -/
 noncomputable def basis_algebra_as_vector_space : VectorSpaceObject := {
   space := BasisAlgebra,
   grading := grade_linear_basis
@@ -433,7 +433,7 @@ theorem rnt_definition_1_2_1_compliance :
   use basis_algebra_as_vector_space
   exact ⟨rfl, ⟨fun _ => ⟨grade_Z, rfl⟩, nilpotent_structure_preserved⟩⟩
 
-/-- Compliance with RNT-LIGHT Definition 1.3.1 (braided ∞-category). -/
+/-- Compliance with RNT-LIGHT Definition 1.3.1 (symmetric monoidal category). -/
 theorem rnt_definition_1_3_1_compliance :
   ∃ (cat : BraidedInfinityCategory),
     cat = VectorSpaceBraidedCategory ∧

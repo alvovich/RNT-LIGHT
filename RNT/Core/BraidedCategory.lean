@@ -84,8 +84,15 @@ lemma tensor_comm_apply {R M N : Type*} [CommSemiring R] [AddCommMonoid M] [AddC
   -- TensorProduct.comm swaps elements in tensor product
   simp [TensorProduct.comm_tmul]
 
-/-- ∞-category structure for modeling higher morphisms (RNT-LIGHT Definition 1.3.1).
-An ∞-category has objects, morphisms, and all higher coherence data (2-morphisms, 3-morphisms, etc.). -/
+/-- Abstract interface for monoidal structures with braiding.
+Named "InfinityCategory" as historical scaffold from earlier design that considered
+higher-categorical models. Concrete realization VectorSpaceBraidedCategory is a
+symmetric monoidal 1-category (higher morphisms = strict equalities via PLift,
+three/four_morphisms = Unit).
+
+This is NOT a model of ∞-categories (no quasi-categorical structure, no Segal conditions,
+no horn-filling conditions). All RNT-LIGHT theorems (T1–T6) only require symmetric
+monoidal 1-category structure. -/
 structure InfinityCategory where
   -- Objects of the ∞-category (invariants in RNT terminology)
   objects : Type*
@@ -174,16 +181,19 @@ structure InfinityCategory where
   functor_2_comp : ∀ {X Y Z : objects} (f : morphisms X Y) (g : morphisms Y Z),
     three_morphisms (comp2_horiz (id2 f) (id2 g)) (id2 (comp g f))
 
-/-- Braided ∞-category according to RNT-LIGHT Definition 1.3.1.
+/-- Braided monoidal category structure (RNT-LIGHT Definition 1.3.1).
 
-A braided ∞-category 𝒜 is a symmetric monoidal ∞-category equipped with:
+A braided monoidal category 𝒜 is a monoidal category equipped with:
 
-1. Tensor product ⊗: 𝒜 × 𝒜 → 𝒜 - a functor, associative and
-   commutative up to coherent natural isomorphisms
+1. Tensor product ⊗: 𝒜 × 𝒜 → 𝒜 (associative, unital up to coherent isomorphisms)
+2. Braiding τ_{X,Y}: X⊗Y → Y⊗X (natural isomorphism)
+3. Hexagonal axioms ensuring braiding coherence with associator
 
-2. Braiding - a natural isomorphism τ_{X,Y}: X ⊗ Y → Y ⊗ X
+When braiding is symmetric (τ²=id), this is a symmetric monoidal category.
+RNT-LIGHT realization uses Mathlib TensorProduct.comm which is symmetric.
 
-3. Hexagonal axioms ensuring braiding coherence
+Note: Structure extends "InfinityCategory" interface for compatibility with earlier
+design, but VectorSpaceBraidedCategory realization is a 1-category (not ∞-category).
 -/
 structure BraidedInfinityCategory extends InfinityCategory where
   -- TENSOR PRODUCT as functor ⊗: 𝒜 × 𝒜 → 𝒜
@@ -286,14 +296,23 @@ attribute [instance] VectorSpaceObject.add_comm_group
 attribute [instance] VectorSpaceObject.module_struct
 attribute [instance] VectorSpaceObject.finite_dim
 
-/-- Braided ∞-category realized on finite-dimensional vector spaces over ℂ.
+/-- Symmetric monoidal category Vect^{fd}_ℂ realized via Mathlib TensorProduct.
 
-This realization strictly follows RNT-LIGHT Definition 1.3.1:
-- Objects: finite-dimensional vector spaces over ℂ
-- Morphisms: linear maps
-- Tensor product: standard tensor product of vector spaces
-- Braiding: canonical permutation with graded signs
--/
+Objects: finite-dimensional ℂ-vector spaces (VectorSpaceObject)
+Morphisms: ℂ-linear maps
+Tensor product: TensorProduct ℂ V W with standard Mathlib coherences
+Braiding: TensorProduct.comm ℂ V W (symmetric, τ²=id)
+
+All coherences (pentagon, triangle, hexagons) proved via Mathlib lemmas:
+- Associator: TensorProduct.assoc_tmul
+- Unitors: TensorProduct.lid_tmul/rid_tmul
+- Braiding naturality: TensorProduct.comm functoriality
+
+Higher morphisms in abstract interface are strict (two_morphisms = PLift (f = g),
+three/four_morphisms = Unit). This is a 1-category with formal higher structure,
+NOT an ∞-category model.
+
+Follows RNT-LIGHT Definition 1.3.1 (symmetric monoidal category). -/
 -- Marked noncomputable due to use of TensorProduct.comm
 noncomputable def VectorSpaceBraidedCategory : BraidedInfinityCategory where
   -- OBJECTS: finite-dimensional vector spaces over ℂ
@@ -455,12 +474,17 @@ noncomputable def discrete_to_braided_functor {X : Type*} (I : X → VectorSpace
   -- Type conversion, since VectorSpaceBraidedCategory.objects := VectorSpaceObject
   show X → VectorSpaceObject from I
 
-/-- THEOREM: Full compliance with RNT-LIGHT Definition 1.3.1.
+/-- THEOREM: Symmetric monoidal category compliance (RNT-LIGHT Definition 1.3.1).
 
-Proves that VectorSpaceBraidedCategory satisfies all requirements
-of Definition 1.3.1 from Resonant Nilpotence Theory.
+Proves that VectorSpaceBraidedCategory satisfies symmetric monoidal axioms:
+1. Has tensor product functor ⊗: 𝒜 × 𝒜 → 𝒜
+2. Has braiding as natural isomorphism τ_{X,Y}: X⊗Y → Y⊗X
+3. Braiding is invertible (τ⁻¹∘τ = id)
+4. Hexagonal axioms hold (coherence with associator)
+5. Naturality of braiding (commutes with morphisms)
+6. Objects are finite-dimensional ℂ-vector spaces
 -/
-theorem definition_1_3_1_full_compliance :
+theorem symmetric_monoidal_compliance :
   let cat := VectorSpaceBraidedCategory
   -- 1. Has tensor product functor ⊗: 𝒜 × 𝒜 → 𝒜
   (∃ tensor : cat.objects → cat.objects → cat.objects,
@@ -478,10 +502,8 @@ theorem definition_1_3_1_full_compliance :
   (∀ {X X' Y Y'} (f : cat.morphisms X X') (g : cat.morphisms Y Y'),
     Nonempty (cat.two_morphisms (cat.comp (cat.braiding X' Y') (cat.tensor_mor f g))
                       (cat.comp (cat.tensor_mor g f) (cat.braiding X Y)))) ∧
-  -- 6. Objects represent invariants (vector spaces)
-  (∀ V : VectorSpaceObject, True ∧ FiniteDimensional ℂ V.space) ∧
-  -- 7. Morphisms represent higher homotopies (linear maps + 2-morphisms)
-  True := by
+  -- 6. Objects are finite-dimensional vector spaces
+  (∀ V : VectorSpaceObject, True ∧ FiniteDimensional ℂ V.space) := by
   constructor
   · exact ⟨VectorSpaceBraidedCategory.tensor_obj, rfl⟩
   constructor
@@ -496,10 +518,8 @@ theorem definition_1_3_1_full_compliance :
   constructor
   · intro X X' Y Y' f g
     exact ⟨VectorSpaceBraidedCategory.braiding_naturality f g⟩
-  constructor
   · intro V
     exact ⟨trivial, V.finite_dim⟩
-  · trivial
 
 /-- THEOREM: Connection to universal system (RNT-LIGHT Definition 1.1.1) -/
 theorem braided_category_universal_system_connection :

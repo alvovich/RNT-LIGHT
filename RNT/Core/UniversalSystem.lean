@@ -23,8 +23,8 @@ A universal system ℌ = (X, P, Φ, I, 𝒜) consists of:
 - X: colimit of state spaces X_s
 - P: colimit of parameter spaces P_s
 - Φ: X × P → X joint continuous evolution map
-- I: X → 𝒜 functor into braided ∞-category
-- 𝒜: braided ∞-category of invariants -/
+- I: X → 𝒜 functor into symmetric monoidal category
+- 𝒜: symmetric monoidal category of invariants -/
 structure UniversalSystem (S_type : Type*) (dirS_inst : DirectedSystem S_type) where
   X_family : StateSpaceFamily S_type dirS_inst
   P_family : ParameterFamily S_type dirS_inst
@@ -69,7 +69,7 @@ structure UniversalSystem (S_type : Type*) (dirS_inst : DirectedSystem S_type) w
       f_map s₂ (P_family.map h p) = f_map s₁ p),
     ∃! (g : P → Q), (∀ (s : S_type) (p : P_family.param s), g (P_inclusion s p) = f_map s p) ∧
     @Monotone P Q P_order_univ.toPreorder Q_order.toPreorder g
-  /-- Braided ∞-category of invariants (RNT-LIGHT Section 2) -/
+  /-- Symmetric monoidal category of invariants (RNT-LIGHT Section 2) -/
   𝒜 : BraidedInfinityCategory
   /-- Invariant functor I: X → 𝒜 mapping each state to its algebra of invariants -/
   I : X → 𝒜.objects

@@ -100,32 +100,34 @@ For n ≥ 1, the tensor power A_ε^{⊗ n} has dimension dim_ℂ(A_ε^{⊗ n}) =
 
 2.1. Objects and morphisms
 
-We work concretely in the symmetric monoidal category Vect^{fd}_ℂ whose objects are finite-dimensional complex vector spaces, morphisms are ℂ-linear maps. The monoidal structure is the usual tensor product ⊗ over ℂ with unit object ℂ. The formalization implements the full structure of a braided ∞-category (with 2-, 3-, 4-morphisms, simplicial structure, and higher coherence laws) as defined in Definition 1.3.1 below. For the concrete case Vect^{fd}_ℂ, the higher morphisms are strict (equalities lifted to Types), making the structure effectively a strict monoidal category, but the ∞-categorical framework is present throughout the Lean code.
+We work concretely in the symmetric monoidal category Vect^{fd}_ℂ whose objects are finite-dimensional complex vector spaces, morphisms are ℂ-linear maps. The monoidal structure is the usual tensor product ⊗ over ℂ with unit object ℂ. The formalization implements a symmetric monoidal category structure using Mathlib TensorProduct with standard coherences (associator via TensorProduct.assoc, unitors via TensorProduct.lid/rid, braiding via TensorProduct.comm). All coherences are strict (1-category); no higher-categorical structure is modeled.
 
-2.1.1. Definition 1.3.1 (Braided ∞-Category)
+2.1.1. Definition 1.3.1 (Symmetric Monoidal Category)
 
-A braided ∞-category 𝒜 consists of:
+A symmetric monoidal category 𝒜 consists of:
 
-1. ∞-categorical structure: Objects, morphisms (1-morphisms), and higher morphisms (2-, 3-, 4-morphisms as Types, not Props) with composition laws comp, id, and higher coherences (assoc, id_comp, comp_id as 2-morphisms; comp2_vert/horiz for vertical/horizontal composition; interchange law and functor_2_comp as 3-morphisms).
+1. Objects and morphisms with associative, unital composition laws.
 
-2. Tensor product functor ⊗: 𝒜 × 𝒜 → 𝒜 with unit object I and natural transformations:
+2. Tensor product functor ⊗: 𝒜 × 𝒜 → 𝒜 with unit object I and natural isomorphisms:
    - Associator α: (X⊗Y)⊗Z ≃ X⊗(Y⊗Z)
    - Left/right unitors λ, ρ: I⊗X ≃ X ≃ X⊗I
    - Functoriality: ⊗ respects composition and identities
    - Pentagon axiom (associator coherence) and triangle axiom (unitor coherence)
 
 3. Braiding τ_{X,Y}: X⊗Y → Y⊗X as natural isomorphism satisfying:
-   - Invertibility: τ_{Y,X} ∘ τ_{X,Y} = id (symmetry condition)
+   - Symmetry: τ_{Y,X} ∘ τ_{X,Y} = id (proved as graded_braiding_anticommutativity)
    - Naturality: τ_{X',Y'} ∘ (f⊗g) = (g⊗f) ∘ τ_{X,Y} for all morphisms f: X→X', g: Y→Y'
    - Hexagonal axioms: coherence with associator in triple products (two hexagons)
 
-4. Grading: Objects carry grading homomorphisms |·|: V →ₗ[ℂ] ℂ assigning degrees.
+The symmetry condition τ²=id upgrades the structure from merely braided to symmetric monoidal.
 
-5. Graded braiding formula: τ_{X,Y}(x⊗y) = (-1)^{|x||y|} y⊗x. In the LIGHT formalization, graded signs are simplified (τ implemented via TensorProduct.comm); full version with explicit signs is planned for Part II.
+References: Mac Lane [1] Ch. VII (monoidal categories), Etingof et al. [2] §2.8 (braided and symmetric categories).
 
-Lean: InfinityCategory (22 fields), BraidedInfinityCategory (extends + 21 fields), VectorSpaceObject (with grading field), VectorSpaceBraidedCategory (concrete realization), definition_1_3_1_full_compliance (proves 7 properties).
+Lean: Uses Mathlib TensorProduct.assoc/comm/lid/rid for coherences. Key definitions: VectorSpaceObject (finite-dimensional spaces with grading field for future extensions), VectorSpaceBraidedCategory (monoidal structure on Vect^{fd}_ℂ), graded_braiding (τ_{X,Y} implemented via TensorProduct.comm). Key theorems: symmetric_monoidal_compliance (proves tensor functor, braiding isomorphism, invertibility, hexagons, naturality, finite-dimensionality), graded_braiding_anticommutativity (τ²=id via TensorProduct.comm involution).
 
-Intuition: A braided ∞-category captures algebraic operations (tensor product ⊗) with all possible rearrangements (braiding τ) and their compatibility (coherence axioms). The "∞" refers to higher morphisms: 2-morphisms track equality of 1-morphisms (assoc: (f∘g)∘h = f∘(g∘h)), 3-morphisms track coherence of 2-morphisms (interchange law), 4-morphisms ensure consistency at next level. For finite-dimensional vector spaces (our case), higher morphisms are strict (equalities lifted to Types), making the structure effectively a 1-category with formal higher structure. Braiding τ_{X,Y}: X⊗Y → Y⊗X encodes "swapping" tensor factors; hexagonal axioms ensure this swapping commutes with associativity in triple products. Symmetry τ²=id (proved by graded_braiding_anticommutativity) upgrades braiding to full commutativity.
+Note: Graded braiding formula τ_{X,Y}(x⊗y) = (-1)^{|x||y|} y⊗x (where |·| denotes grading) is simplified in LIGHT formalization (signs omitted, τ = TensorProduct.comm). Full version with explicit Koszul signs planned for Part II.
+
+Intuition: A symmetric monoidal category captures compositional algebraic operations (tensor product ⊗) with all possible rearrangements (braiding τ) and their compatibility (coherence axioms). Braiding τ_{X,Y}: X⊗Y → Y⊗X encodes "swapping" tensor factors; hexagonal axioms ensure this swapping commutes with associativity in triple products. Symmetry τ²=id ensures full commutativity of independent subsystems, critical for parallel computation where operation order may vary.
 
 2.2. Coherence and braiding
 
@@ -142,7 +144,7 @@ Coherence axioms (all proved in Lean4):
 - Naturality of braiding (braiding_naturality): diagram commutativity with tensor_mor
 - Functoriality of tensor product (tensor_functoriality_comp, tensor_functoriality_id)
 
-Lean: definition_1_3_1_full_compliance (7 properties: tensor functor, braiding isomorphism, invertibility, hexagons, naturality, finite-dimensionality, morphisms), braiding_coherence, graded_braiding_anticommutativity (proof τ²=id), BraidedInfinityCategoryCompliance.
+Lean: symmetric_monoidal_compliance (6 properties: tensor functor, braiding isomorphism, invertibility, hexagons, naturality, finite-dimensionality), braiding_coherence, graded_braiding_anticommutativity (proof τ²=id).
 
 2.3. Embedding A_ε
 
@@ -396,6 +398,7 @@ Status: Trivial case Φ=id verified (Theorem 3.3, Integration.lean lines 823-844
 - Higher-order nilpotency: extend beyond degree-4 vanishing (current: ε₁ε₂θ=0, future: degree-n truncations)
 - Graded braiding signs: explicit (-1)^{|x||y|} factors in τ_{X,Y}(x⊗y) (simplified in LIGHT, full version Part II)
 - Additional algebras: classify nilpotent DGAs with similar truncation properties, identify applications beyond A_ε
+- ∞-categorical extension: Current LIGHT formalization uses symmetric monoidal 1-category Vect^{fd}_ℂ with strict coherences (Mathlib TensorProduct). For applications requiring weakly associative compositions (homotopy-coherent diagrams, derived categories of A_ε-modules, higher gauge theories), Part II may extend to true ∞-categorical models: (i) quasicategories (Joyal) via simplicial sets with horn-filling conditions, (ii) complete Segal spaces (Rezk) via simplicial spaces with Segal maps, (iii) implementation via Mathlib SimplicialSet or future CategoryTheory.Quasicategory. Current symmetric monoidal structure is sufficient for all stated computational applications (solvers, optimization, graphs, quantum simulation).
 
 Performance estimates (×100-1000 speedups) derive from algorithmic complexity theory, hardware roofline models, and empirical scaling laws. Conservative estimates across scenarios: ×100-1000 for distributed/I/O-bound workloads, ×50-500 for memory-bound, ×10-100 for computation-bound. Experimental validation ongoing.
 
@@ -517,30 +520,40 @@ A.5. File correspondence summary
 
 Appendix B. Core (Lean correspondence)
 
-B.1. Categorical structures (BraidedCategory.lean)
+B.1. Symmetric monoidal category structure (BraidedCategory.lean)
 
-- InfinityCategory (22 fields): objects, morphisms (1-morphisms), morphisms_simplicial (SSet), two_morphisms/three_morphisms/four_morphisms (higher homotopies as Type*, not Prop), comp/id (composition/identity), assoc/id_comp/comp_id (associativity/units as 2-morphisms), comp2_vert/comp2_horiz (vertical/horizontal composition of 2-morphisms), id2 (identity 2-morphism), comp3_vert/id3 (3-morphism operations), two_morphisms_inv (inversion), assoc_2_vert/id2_comp_vert/comp2_id_vert (2-morphism coherence as 3-morphisms), interchange (interchange law as 3-morphism), functor_2_comp (functoriality compatibility as 3-morphism)
+The formalization realizes Vect^{fd}_ℂ as symmetric monoidal category using Mathlib TensorProduct module:
 
-- BraidedInfinityCategory (extends InfinityCategory + 21 fields): tensor_obj/tensor_mor (tensor product functor), unit (unit object), associator/associator_inv/associator_iso (α: (X⊗Y)⊗Z ≃ X⊗(Y⊗Z)), left_unitor/left_unitor_inv/left_unitor_iso (λ: I⊗X ≃ X), right_unitor/right_unitor_inv/right_unitor_iso (ρ: X⊗I ≃ X), braiding/braiding_inv/braiding_iso (τ: X⊗Y ≃ Y⊗X), braiding_naturality (naturality of braiding), tensor_functoriality_comp/tensor_functoriality_id (functoriality of tensor product), pentagon (pentagon axiom for associator), triangle (triangle axiom for unitors), hexagon_1/hexagon_2 (hexagonal axioms for braiding coherence)
+Objects and morphisms:
+- VectorSpaceObject (4 fields + instances): space (Type*), add_comm_group/module_struct/finite_dim (instances), grading: space →ₗ[ℂ] ℂ (grading homomorphism for future extensions with Koszul signs)
+- Morphisms: linear maps V.space →ₗ[ℂ] W.space
 
-- VectorSpaceObject (4 fields + instances): space (Type*), add_comm_group/module_struct/finite_dim (instances), grading: space →ₗ[ℂ] ℂ (grading homomorphism for Definition 1.3.1 formula τ_{X,Y}(x⊗y) = (-1)^{|x||y|} y⊗x)
+Tensor product structure (via Mathlib):
+- Tensor product: TensorProduct ℂ V.space W.space with Mathlib coherences
+- Associator: TensorProduct.assoc ℂ V W X (linear equivalence (V⊗W)⊗X ≃ V⊗(W⊗X))
+- Left unitor: TensorProduct.lid ℂ V (linear equivalence ℂ⊗V ≃ V)
+- Right unitor: TensorProduct.rid ℂ V (linear equivalence V⊗ℂ ≃ V)
+- Braiding: TensorProduct.comm ℂ V W (linear equivalence V⊗W ≃ W⊗V, symmetric/involutive)
 
-- VectorSpaceBraidedCategory: concrete realization of BraidedInfinityCategory for Vect^{fd}_ℂ (43 field definitions implementing all abstract structure)
+Coherence proofs (BraidedCategory.lean lines 401-439):
+- Pentagon axiom: proved via TensorProduct.assoc_tmul (line 403)
+- Triangle axiom: TensorProduct.lid_tmul/rid_tmul compatibility (line 407)
+- Hexagonal axioms: braiding coherence with associator in triple products (lines 430-439)
+- All coherences reduce to rfl or simp with Mathlib lemmas
 
 Key definitions:
-- graded_braiding (V W): TensorProduct ℂ V.space W.space →ₗ[ℂ] TensorProduct ℂ W.space V.space — implements Definition 1.3.1 braiding formula (simplified without graded signs in LIGHT version)
+- graded_braiding (V W): TensorProduct ℂ V.space W.space →ₗ[ℂ] TensorProduct ℂ W.space V.space — braiding map τ_{V,W} implemented as TensorProduct.comm (simplified without Koszul signs in LIGHT)
 - discrete_to_braided_functor: X → VectorSpaceBraidedCategory.objects — functor for universal systems
 
 Key theorems (BraidedCategory.lean):
-- definition_1_3_1_full_compliance: proves 7 properties of Definition 1.3.1
-  (1) tensor functor ⊗ exists, (2) braiding τ is natural isomorphism, (3) braiding is invertible,
-  (4) hexagonal axioms hold, (5) braiding is natural, (6) objects are finite-dimensional, (7) morphisms have ∞-structure
-- graded_braiding_anticommutativity: τ² = id (proof of symmetry via TensorProduct.comm involution)
-- BraidedInfinityCategoryCompliance: 4 properties
-  (1) 2-morphisms are Type* (not Prop), (2) simplicial structure exists,
-  (3) braiding is preserved in VectorSpaceBraidedCategory, (4) graded braiding implemented (simplified)
-- braiding_coherence: hexagon axioms ensure coherence in triple products
-- braided_category_universal_system_connection: braided category serves as target for functor I
+- symmetric_monoidal_compliance: proves 6 properties of symmetric monoidal structure
+  (1) tensor functor ⊗ exists, (2) braiding τ is natural isomorphism, (3) braiding is invertible (τ⁻¹∘τ = id),
+  (4) hexagonal axioms hold, (5) braiding is natural (commutes with morphisms), (6) objects are finite-dimensional
+- graded_braiding_anticommutativity: τ² = id (proof of symmetry via TensorProduct.comm involution property)
+- braiding_coherence: hexagon axioms ensure braiding coherence with associator in triple products
+- braided_category_universal_system_connection: symmetric monoidal category serves as target for functor I: X→𝒜
+
+Note on code structure: Abstract interface named "InfinityCategory" and "BraidedInfinityCategory" for historical reasons (earlier design considered higher morphisms). Actual realization VectorSpaceBraidedCategory implements symmetric monoidal 1-category—higher morphisms in abstract interface are strict (two_morphisms = PLift equality, three/four_morphisms = Unit). This is NOT a model of ∞-categories (no quasi-categorical structure, no Segal conditions, no horn-filling). All RNT-LIGHT theorems (T1–T6) only require symmetric monoidal 1-category structure.
 
 B.2. Universal systems
 
